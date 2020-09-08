@@ -1,12 +1,12 @@
 from setuptools import setup
-setup(name='solarforecast',
+setup(name='PMUforecast',
 version='0.1',
 description='Testing installation of Package',
 url='#',
 author='Armin',
 author_email='aalig002@ucr.edu',
 license='MIT',
-packages=['solarforecast'],
+packages=['PMUforecast'],
 install_requires=[
     'setuptools',
     'markdown',
