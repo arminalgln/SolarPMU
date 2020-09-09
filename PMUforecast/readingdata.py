@@ -18,6 +18,7 @@ import datetime
 import math
 import json
 import urllib.request
+from datetime import datetime, timezone
 
 
 class UCRPMU:
@@ -40,6 +41,11 @@ class UCRPMU:
                 data = data.reindex(idx, fill_value=0)
                 data['DateTime'] = idx
                 whole_data = whole_data.append(data, ignore_index=True)
+
+        ts = []
+        for i in whole_data['DateTime']:
+            ts.append(int(i.timestamp()))
+        whole_data['ts'] = ts
         return whole_data
 
     def get_train_test(self, train_chunk, window_horizon):
@@ -78,6 +84,63 @@ class UCRPMU:
         return train_data_x, train_data_y, test_data_x, test_data_y
 
 
+class SolcastFiveMinHistorical:
+    def __init__(self, dst):
+        # self.train_index = train_index
+        # self.test_index = test_index
+        self.dst = dst
+        self.data = self.__time_add()
+
+        # self.train,  self.test = self.__train_test_historical()
+
+    def __time_add(self):
+        historical = pd.read_csv(self.dst)
+
+        def __utc_to_local(utc_dt):
+            return utc_dt.replace(tzinfo=timezone.utc).astimezone(tz=None)
+
+        ts = []
+        tsold = []
+        for i in historical['PeriodEnd']:
+            date = datetime.strptime(i, '%Y-%m-%dT%H:%M:%SZ')
+            t = datetime.timestamp(date)  #
+            ts.append(int(t))
+
+            date = __utc_to_local(datetime.strptime(i, '%Y-%m-%dT%H:%M:%SZ'))
+            t = datetime.timestamp(date)  # Irvine to UTC difference
+            more_shift = 7*3600
+            tsold.append(int(t) - more_shift)
+        historical['t'] = ts
+        historical['told'] = tsold
+
+        return historical
+
+    # def __train_test_historical(self):
+    #
+    #     historical = self.__time_add()
+    #
+    #     train = {}
+    #     count = 0
+    #     for i, t in enumerate(self.train_index):
+    #         start = t
+    #         end = start + 24 * 3600
+    #         part = historical.loc[(historical['t'] >= start) & (historical['t'] < end)]
+    #         if part.shape[0] == 24:
+    #             train[t] = part
+    #             count += 1
+    #     test = {}
+    #     count = 0
+    #     for i, t in enumerate(self.test_index):
+    #         start = t
+    #         end = start + 24 * 3600
+    #         part = historical.loc[(historical['t'] >= start) & (historical['t'] < end)]
+    #         if part.shape[0] == 24:
+    #             test[t] = part
+    #             count += 1
+    #
+    #     return train, test
+    #
+
 
 class SolcastHistorical:
 
@@ -91,8 +154,8 @@ class SolcastHistorical:
         historical = pd.read_csv(self.dst)
         ts = []
         for i in historical['PeriodEnd']:
-            date = datetime.datetime.strptime(i, '%Y-%m-%dT%H:%M:%SZ')
-            t = datetime.datetime.timestamp(date) - 7 * 3600  # Irvine to UTC difference
+            date = datetime.strptime(i, '%Y-%m-%dT%H:%M:%SZ')
+            t = datetime.timestamp(date) - 7 * 3600  # Irvine to UTC difference
             ts.append(int(t))
         historical['t'] = ts
         return historical
@@ -153,7 +216,7 @@ class SolcastDataForecast:
         temp_time=[]
         desired_tz=self.whole_location_info['annotations']['timezone']['name']
         def utc_to_local(utc_dt,desired_tz):
-            return utc_dt.replace(tzinfo=datetime.timezone.utc).astimezone(tz=desired_tz)
+            return utc_dt.replace(tzinfo=timezone.utc).astimezone(tz=desired_tz)
         for t in self.actuals_data['period_end']:
             temp_time.append(utc_to_local(t,desired_tz))
         

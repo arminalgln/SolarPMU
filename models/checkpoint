@@ -1,0 +1,2 @@
+model_checkpoint_path: "w500_ghi_cloud"
+all_model_checkpoint_paths: "w500_ghi_cloud"

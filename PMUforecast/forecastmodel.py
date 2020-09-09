@@ -2,22 +2,14 @@
 # class for model
 # =============================================================================
 import tensorflow as tf
-# from tensorflow import keras
-# from tensorflow.keras import layers
-# from tensorflow.keras.layers import Dense, Flatten, Conv2D
-# from tensorflow.keras import Model
+from tensorflow import keras
+from tensorflow.keras import layers
+from tensorflow.keras.layers import Dense, LSTM, LeakyReLU
+from tensorflow.keras import Model
 import numpy as np
 # import keras
-from tensorflow.keras import layers
+# from keras import layers
 # from keras.layers import
-# from tensorflow.compat.v1.keras.layers import CuDNNLSTM
-from tensorflow.keras.layers import Dense, Dropout, Input, Embedding, LSTM, Reshape#, CuDNNLSTM
-from tensorflow.keras.models import Model, Sequential
-# from keras.datasets import mnist
-from tqdm import tqdm
-from tensorflow.keras.layers import LeakyReLU
-from tensorflow.keras.activations import relu
-# from tensorflow.keras.optimizers import adam
 
 
 class PMUF:
@@ -25,32 +17,23 @@ class PMUF:
     This is a class for forecasting solar irrediation    
     """
 
-    def __init__(self, feature_numbers, input_resolution, output_resolution):
+    def __init__(self, feature_numbers, output_resolution):
         self.feature_numbers = feature_numbers
-        self.input_resolution = input_resolution
+        # self.input_resolution = input_resolution
         self.output_resolution = output_resolution
         self.model = self.__make_model()
 
     # private funciton to make model
     def __make_model(self):
-        model = Sequential()
-        # model.add(LSTM(units=32, input_shape=(self.input_resolution, self.feature_numbers),
-        #                     return_sequences=True, activation='tanh', recurrent_activation='sigmoid'))
-        # model.add(LeakyReLU(0.2))
-        model.add(LSTM(units=10,input_shape=(self.input_resolution, self.feature_numbers), activation='tanh', recurrent_activation='sigmoid'))
-        # model.add(LeakyReLU(0.2))
-        # model.add(Dense(units=self.input_resolution, activation='relu'))
-        model.add(Dense(units=self.output_resolution, activation='sigmoid'))
-
-        # model = keras.Sequential(
-        #     [
-        #         generator.add(CuDNNLSTM(units=256, input_shape=(100, 1), return_sequences=True))
-        #         generator.add(LeakyReLU(0.2))
-        #      layers.LSTM(50, activation='relu', name='lstm_1', dropout=0.2, return_sequences=True),
-        #      layers.LSTM(50, activation='relu', name='lstm_2', dropout=0.2),
-        #      # layers.Dense(self.output_resolution, activation='relu', name='output'),
-        #      layers.Dense(self.output_resolution, activation='relu', name='output'),
-        #      ])
+        model = keras.Sequential(
+            [  # keras.Input(shape=(self.resolution, self.inp_num,)),
+                LSTM(32,  name='lstm_1', return_sequences=True),
+                LeakyReLU(0.2),
+                LSTM(64, name='lstm_2'),
+                LeakyReLU(0.2),
+                Dense(512, name='lstm_2', activation='relu'),
+                Dense(self.output_resolution, activation='sigmoid', name='output'),
+            ])
         return model
 
     def opt_ls_mtr(self, **kwarg):

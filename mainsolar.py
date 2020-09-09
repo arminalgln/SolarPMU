@@ -17,6 +17,19 @@ import datetime
 import time
 from time import sleep
 import schedule
+#%%
+gpus = tf.config.experimental.list_physical_devices('GPU')
+if gpus:
+  # Restrict TensorFlow to only allocate 1GB of memory on the first GPU
+  try:
+    tf.config.experimental.set_virtual_device_configuration(
+        gpus[0],
+        [tf.config.experimental.VirtualDeviceConfiguration(memory_limit=1024)])
+    logical_gpus = tf.config.experimental.list_logical_devices('GPU')
+    print(len(gpus), "Physical GPUs,", len(logical_gpus), "Logical GPUs")
+  except RuntimeError as e:
+    # Virtual devices must be set before GPUs have been initialized
+    print(e)
 
 #%%
 ####################################################
@@ -70,19 +83,19 @@ for i in list(y_train):
 #%%
 # x_train_shaped = np.reshape(x_train, newshape=(-1, 2016, 1))
 x_train = x_train.reshape(x_train.shape[0], each_day_horizon* window_horizon, feature_numbers)
-y_train = y_train.reshape(y_train.shape[0], each_day_horizon, feature_numbers)
+y_train = y_train.reshape(y_train.shape[0], each_day_horizon)
 
 
 #%%
 
 pmu_forecaster = PMUF(feature_numbers, each_day_horizon * window_horizon, each_day_horizon)
 pmu_forecaster.opt_ls_mtr(optimizer='adam',
-                                loss='mean_squared_logarithmic_error',
+                                loss='mse',
                                 metric='mse')
 # #train
 #%%
 # y_train=y_train.reshape(327,48,1)
-pmu_forecaster.train(x_train, y_train, batch=2, epoch=100)
+pmu_forecaster.train(x_train, y_train, batch=1, epoch=20)
 #evaluation on train set
 # pmu_forecaster.solar_eval(x_train, y_train)
 # #evaluation on dev set
